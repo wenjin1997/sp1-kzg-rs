@@ -16,7 +16,6 @@ use kzg_rs::{
     trusted_setup::KzgSettings,
     PublicValuesStruct,
 };
-use std::env;
 
 pub fn main() {
     println!("🚀 KZG-RS 验证工具");
@@ -32,16 +31,18 @@ pub fn main() {
         }
     };
 
-    let commitment = sp1_zkvm::io::read::<&str>();
-    let z = sp1_zkvm::io::read::<&str>();
-    let y = sp1_zkvm::io::read::<&str>();
-    let proof = sp1_zkvm::io::read::<&str>();
+    // 这里的错误是：sp1_zkvm::io::read::<&str>() 期望 &str 实现 serde::de::Deserialize<'de>，但 &str 只为特定生命周期实现了 Deserialize，不能满足泛型要求。
+    // 解决方法：改为读取 String 类型，因为 String 实现了所有生命周期的 Deserialize。
+    let commitment = sp1_zkvm::io::read::<String>();
+    let z = sp1_zkvm::io::read::<String>();
+    let y = sp1_zkvm::io::read::<String>();
+    let proof = sp1_zkvm::io::read::<String>();
 
     let input = Input {
-        commitment,
-        z,
-        y,
-        proof,
+        commitment: commitment.as_str(),
+        z: z.as_str(),
+        y: y.as_str(),
+        proof: proof.as_str(),
     };
 
     let test: Test<Input> = Test {
@@ -62,10 +63,14 @@ pub fn main() {
     let result = KzgProof::verify_kzg_proof(&commitment, &z, &y, &proof, &kzg_settings);
 
     let bytes = PublicValuesStruct::abi_encode(&PublicValuesStruct {
-        commitment: commitment.to_bytes(),
-        z: z.to_bytes(),
-        y: y.to_bytes(),
-        proof: proof.to_bytes(),
+        // 这里的错误提示是类型不匹配（mismatched types）：
+        // 期望 alloy_sol_types::private::Bytes 类型，但实际传入的是 Vec<u8>。
+        // alloy-sol-types 的 sol! 宏生成的 struct 字段类型 bytes 实际上是 alloy_sol_types::private::Bytes，
+        // 不能直接用 Vec<u8> 赋值，需要用 .into() 或 Bytes::from/to。
+        commitment: commitment.to_bytes().into(),
+        z: z.to_bytes().into(),
+        y: y.to_bytes().into(),
+        proof: proof.to_bytes().into(),
         result: result.unwrap(),
     });
     sp1_zkvm::io::commit_slice(&bytes);

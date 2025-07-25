@@ -45,6 +45,22 @@ define_bytes_type!(Bytes32, 32);
 define_bytes_type!(Bytes48, 48);
 define_bytes_type!(Blob, BYTES_PER_BLOB);
 
+// 为 Bytes32 实现 to_bytes 方法
+impl Bytes32 {
+    /// 转换为 Vec<u8>，用于 ABI 编码 bytes
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
+}
+
+// 为 Bytes48 实现 to_bytes 方法
+impl Bytes48 {
+    /// 转换为 Vec<u8>，用于 ABI 编码 bytes
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
+}
+
 impl Blob {
     pub fn as_polynomial(&self) -> Result<Vec<Scalar>, KzgError> {
         self.0
@@ -62,11 +78,19 @@ mod tests {
     fn test_bytes32() {
         let bytes = crate::dtypes::Bytes32::from_slice(&[0u8; 32]).unwrap();
         assert_eq!(bytes.0.len(), 32);
+        // 测试 to_bytes
+        let v = bytes.to_bytes();
+        assert_eq!(v.len(), 32);
+        assert!(v.iter().all(|&b| b == 0));
     }
 
     #[test]
     fn test_bytes48() {
         let bytes = crate::dtypes::Bytes48::from_slice(&[0u8; 48]).unwrap();
         assert_eq!(bytes.0.len(), 48);
+        // 测试 to_bytes
+        let v = bytes.to_bytes();
+        assert_eq!(v.len(), 48);
+        assert!(v.iter().all(|&b| b == 0));
     }
 }

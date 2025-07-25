@@ -7,3 +7,4 @@ edition = "2021"
 alloy-sol-types = { workspace = true }
 sp1-zkvm = "5.0.8"
 kzg-rs = { path = "../lib" }
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }

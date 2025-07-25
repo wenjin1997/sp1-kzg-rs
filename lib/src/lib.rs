@@ -23,6 +23,18 @@ use alloy_sol_types::sol;
 sol! {
     /// The public values encoded as a struct that can be easily deserialized inside Solidity.
     struct PublicValuesStruct {
+        // 这里支持的类型有：基础类型（如 uint256, int256, address, bool, bytes, string），
+        // 固定长度字节数组（如 bytes32），
+        // 动态长度字节数组（如 bytes, Vec<u8>），
+        // 固定长度数组（如 uint256[4]），
+        // 动态长度数组（如 uint256[]），
+        // 以及嵌套 struct。
+        // 例如：
+        // 这里的提示是：sol! 宏中的 struct 字段定义格式不正确。
+        // 在 alloy-sol-types 的 sol! 宏中，struct 字段应使用 Solidity 风格类型声明，
+        // 例如 bytes commitment; bytes32 foo; bool bar; 等。
+        // 不能直接写 Vec<u8>，应改为 bytes。
+        // 正确写法如下：
         bytes commitment;
         bytes z;
         bytes y;

@@ -2256,6 +2256,7 @@ name = "kzg-rs-program"
 version = "0.1.0"
 dependencies = [
  "alloy-sol-types",
+ "hex",
  "kzg-rs",
  "sp1-zkvm",
 ]
