@@ -61,6 +61,23 @@ cd script
 cargo run --release -- --prove
 ```
 
+Macbook Air M2 Output:
+
+```sh
+commitment: 0x93efc82d2017e9c57834a1246463e64774e56183bb247c8fc9dd98c56817e878d97b05f5c8d900acf1fbbbca6f146556
+z: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+y: 0x0000000000000000000000000000000000000000000000000000000000000000
+input_proof: 0x92c51ff81dd71dab71cefecd79e8274b4b7ba36a0f40e2dc086bc4061c7f63249877db23297212991fd63e07b7ebc348
+stdout: 🚀 KZG-RS 验证工具
+stdout: ==================
+stdout: 开始运行 KZG 证明验证测试...
+stdout: 🚀 KZG-RS 验证工具
+stdout: ==================
+stdout: 开始运行 KZG 证明验证测试...
+Successfully generated proof!
+Successfully verified proof!
+```
+
 ### Generate an EVM-Compatible Proof
 
 > [!WARNING]
