@@ -28,6 +28,30 @@ cargo run --release -- --execute
 
 This will execute the program and display the output.
 
+Macbook Air M2 Output:
+
+```sh
+2025-07-28T01:41:29.613273Z  WARN SP1_PROVER environment variable not set, defaulting to 'cpu'
+commitment: 0x93efc82d2017e9c57834a1246463e64774e56183bb247c8fc9dd98c56817e878d97b05f5c8d900acf1fbbbca6f146556
+z: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+y: 0x0000000000000000000000000000000000000000000000000000000000000000
+input_proof: 0x92c51ff81dd71dab71cefecd79e8274b4b7ba36a0f40e2dc086bc4061c7f63249877db23297212991fd63e07b7ebc348
+2025-07-28T01:41:32.855489Z  INFO execute: clk = 0 pc = 0x2037e4
+stdout: 🚀 KZG-RS 验证工具
+stdout: ==================
+stdout: 开始运行 KZG 证明验证测试...
+2025-07-28T01:41:33.603349Z  INFO execute: gas: 33288186
+2025-07-28T01:41:33.604004Z  INFO execute: close time.busy=755ms time.idle=2.25µs
+Program executed successfully.
+commitment: 0x93efc82d2017e9c57834a1246463e64774e56183bb247c8fc9dd98c56817e878d97b05f5c8d900acf1fbbbca6f146556
+z: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+y: 0x0000000000000000000000000000000000000000000000000000000000000000
+proof: 0x92c51ff81dd71dab71cefecd79e8274b4b7ba36a0f40e2dc086bc4061c7f63249877db23297212991fd63e07b7ebc348
+result: true
+Values are correct!
+Number of cycles: 9508114
+```
+
 ### Generate an SP1 Core Proof
 
 To generate an SP1 [core proof](https://docs.succinct.xyz/docs/sp1/generating-proofs/proof-types#core-default) for your program:
