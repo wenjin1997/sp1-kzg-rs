@@ -84,8 +84,12 @@ fn main() {
 
     if args.execute {
         // Execute the program
+        println!("Execute the program...");
+        let start_time = std::time::Instant::now();
         let (output, report) = client.execute(KZG_RS_ELF, &stdin).run().unwrap();
         println!("Program executed successfully.");
+        let end_time = std::time::Instant::now();
+        println!("Execute time: {:?}", end_time.duration_since(start_time));
 
         let kzg_settings = match kzg_rs::KzgSettings::load_trusted_setup_file() {
             Ok(settings) => settings,
@@ -116,8 +120,16 @@ fn main() {
         let y = Bytes32::from_bytes_vec(y.to_vec()).unwrap();
         let proof = Bytes48::from_bytes_vec(proof.to_vec()).unwrap();
 
+        println!("Verify the proof...");
+        let start_time = std::time::Instant::now();
         let expected_result =
             KzgProof::verify_kzg_proof(&commitment, &z, &y, &proof, &kzg_settings);
+        let end_time = std::time::Instant::now();
+
+        println!(
+            "Verify kzg proof time: {:?}",
+            end_time.duration_since(start_time)
+        );
 
         assert_eq!(true, expected_result.unwrap());
         println!("Values are correct!");
@@ -126,18 +138,36 @@ fn main() {
         println!("Number of cycles: {}", report.total_instruction_count());
     } else {
         // Setup the program for proving.
+        println!("Setup the program for proving...");
+        let start_time = std::time::Instant::now();
         let (pk, vk) = client.setup(KZG_RS_ELF);
+        let end_time = std::time::Instant::now();
+        println!("Setup time: {:?}", end_time.duration_since(start_time));
 
+        println!("Generate the proof...");
+        let start_time = std::time::Instant::now();
         // Generate the proof
         let proof = client
             .prove(&pk, &stdin)
             .run()
             .expect("failed to generate proof");
 
+        let end_time = std::time::Instant::now();
+        println!(
+            "Generate proof time: {:?}",
+            end_time.duration_since(start_time)
+        );
+
         println!("Successfully generated proof!");
 
         // Verify the proof.
+        println!("Verify the proof...");
+        let start_time = std::time::Instant::now();
         client.verify(&proof, &vk).expect("failed to verify proof");
-        println!("Successfully verified proof!");
+        let end_time = std::time::Instant::now();
+        println!(
+            "Verify proof time: {:?}",
+            end_time.duration_since(start_time)
+        );
     }
 }
