@@ -12,11 +12,15 @@
 
 use alloy_sol_types::SolType;
 use clap::Parser;
-use fibonacci_lib::PublicValuesStruct;
+use kzg_rs::{
+    dtypes::{Bytes32, Bytes48},
+    kzg_proof::KzgProof,
+    PublicValuesStruct,
+};
 use sp1_sdk::{include_elf, ProverClient, SP1Stdin};
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
-pub const FIBONACCI_ELF: &[u8] = include_elf!("fibonacci-program");
+pub const KZG_RS_ELF: &[u8] = include_elf!("kzg-rs-program");
 
 /// The arguments for the command.
 #[derive(Parser, Debug)]
@@ -28,8 +32,26 @@ struct Args {
     #[arg(long)]
     prove: bool,
 
-    #[arg(long, default_value = "20")]
-    n: u32,
+    #[arg(
+        long,
+        default_value = "0x93efc82d2017e9c57834a1246463e64774e56183bb247c8fc9dd98c56817e878d97b05f5c8d900acf1fbbbca6f146556"
+    )]
+    commitment: String,
+    #[arg(
+        long,
+        default_value = "0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000"
+    )]
+    z: String,
+    #[arg(
+        long,
+        default_value = "0x0000000000000000000000000000000000000000000000000000000000000000"
+    )]
+    y: String,
+    #[arg(
+        long,
+        default_value = "0x92c51ff81dd71dab71cefecd79e8274b4b7ba36a0f40e2dc086bc4061c7f63249877db23297212991fd63e07b7ebc348"
+    )]
+    input_proof: String,
 }
 
 fn main() {
@@ -50,32 +72,61 @@ fn main() {
 
     // Setup the inputs.
     let mut stdin = SP1Stdin::new();
-    stdin.write(&args.n);
+    stdin.write(&args.commitment);
+    stdin.write(&args.z);
+    stdin.write(&args.y);
+    stdin.write(&args.input_proof);
 
-    println!("n: {}", args.n);
+    println!("commitment: {}", args.commitment);
+    println!("z: {}", args.z);
+    println!("y: {}", args.y);
+    println!("input_proof: {}", args.input_proof);
 
     if args.execute {
         // Execute the program
-        let (output, report) = client.execute(FIBONACCI_ELF, &stdin).run().unwrap();
+        let (output, report) = client.execute(KZG_RS_ELF, &stdin).run().unwrap();
         println!("Program executed successfully.");
+
+        let kzg_settings = match kzg_rs::KzgSettings::load_trusted_setup_file() {
+            Ok(settings) => settings,
+            Err(e) => {
+                eprintln!("加载可信设置失败: {:?}", e);
+                return;
+            }
+        };
 
         // Read the output.
         let decoded = PublicValuesStruct::abi_decode(output.as_slice()).unwrap();
-        let PublicValuesStruct { n, a, b } = decoded;
-        println!("n: {}", n);
-        println!("a: {}", a);
-        println!("b: {}", b);
+        let PublicValuesStruct {
+            commitment,
+            z,
+            y,
+            proof,
+            result,
+        } = decoded;
 
-        let (expected_a, expected_b) = fibonacci_lib::fibonacci(n);
-        assert_eq!(a, expected_a);
-        assert_eq!(b, expected_b);
+        println!("commitment: {}", commitment);
+        println!("z: {}", z);
+        println!("y: {}", y);
+        println!("proof: {}", proof);
+        println!("result: {}", result);
+
+        let commitment = Bytes48::from_bytes_vec(commitment.to_vec()).unwrap();
+        let z = Bytes32::from_bytes_vec(z.to_vec()).unwrap();
+        let y = Bytes32::from_bytes_vec(y.to_vec()).unwrap();
+        let proof = Bytes48::from_bytes_vec(proof.to_vec()).unwrap();
+
+        let expected_result =
+            KzgProof::verify_kzg_proof(&commitment, &z, &y, &proof, &kzg_settings);
+
+        assert_eq!(true, expected_result.unwrap());
         println!("Values are correct!");
 
         // Record the number of cycles executed.
         println!("Number of cycles: {}", report.total_instruction_count());
     } else {
         // Setup the program for proving.
-        let (pk, vk) = client.setup(FIBONACCI_ELF);
+        let (pk, vk) = client.setup(KZG_RS_ELF);
 
         // Generate the proof
         let proof = client

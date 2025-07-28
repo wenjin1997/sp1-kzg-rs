@@ -12,7 +12,10 @@
 
 use alloy_sol_types::SolType;
 use clap::{Parser, ValueEnum};
-use kzg_rs::PublicValuesStruct;
+use kzg_rs::{
+    dtypes::{Blob, Bytes32, Bytes48},
+    KzgError, PublicValuesStruct,
+};
 use serde::{Deserialize, Serialize};
 use sp1_sdk::{
     include_elf, HashableKey, ProverClient, SP1ProofWithPublicValues, SP1Stdin, SP1VerifyingKey,
@@ -20,15 +23,33 @@ use sp1_sdk::{
 use std::path::PathBuf;
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
-pub const FIBONACCI_ELF: &[u8] = include_elf!("fibonacci-program");
+pub const KZG_RS_ELF: &[u8] = include_elf!("kzg-rs-program");
 
 /// The arguments for the EVM command.
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct EVMArgs {
-    #[arg(long, default_value = "20")]
-    n: u32,
-    #[arg(long, value_enum, default_value = "groth16")]
+    #[arg(
+        long,
+        default_value = "0x93efc82d2017e9c57834a1246463e64774e56183bb247c8fc9dd98c56817e878d97b05f5c8d900acf1fbbbca6f146556"
+    )]
+    commitment: String,
+    #[arg(
+        long,
+        default_value = "0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000"
+    )]
+    z: String,
+    #[arg(
+        long,
+        default_value = "0x0000000000000000000000000000000000000000000000000000000000000000"
+    )]
+    y: String,
+    #[arg(
+        long,
+        default_value = "0x92c51ff81dd71dab71cefecd79e8274b4b7ba36a0f40e2dc086bc4061c7f63249877db23297212991fd63e07b7ebc348"
+    )]
+    input_proof: String,
+    #[arg(long, value_enum, default_value = "plonk")]
     system: ProofSystem,
 }
 
@@ -42,13 +63,15 @@ enum ProofSystem {
 /// A fixture that can be used to test the verification of SP1 zkVM proofs inside Solidity.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct SP1FibonacciProofFixture {
-    a: u32,
-    b: u32,
-    n: u32,
+struct SP1KZGRSProofFixture {
+    commitment: Bytes48,
+    z: Bytes32,
+    y: Bytes32,
+    input_proof: Bytes48,
+    result: bool,
     vkey: String,
     public_values: String,
-    proof: String,
+    sp1_proof: String,
 }
 
 fn main() {
@@ -62,13 +85,19 @@ fn main() {
     let client = ProverClient::from_env();
 
     // Setup the program.
-    let (pk, vk) = client.setup(FIBONACCI_ELF);
+    let (pk, vk) = client.setup(KZG_RS_ELF);
 
-    // Setup the inputs.
+    // Setup the inputs with fixed test data
     let mut stdin = SP1Stdin::new();
-    stdin.write(&args.n);
+    stdin.write(&args.commitment);
+    stdin.write(&args.z);
+    stdin.write(&args.y);
+    stdin.write(&args.input_proof);
 
-    println!("n: {}", args.n);
+    println!("commitment: {}", args.commitment);
+    println!("z: {}", args.z);
+    println!("y: {}", args.y);
+    println!("input_proof: {}", args.input_proof);
     println!("Proof System: {:?}", args.system);
 
     // Generate the proof based on the selected proof system.
@@ -83,22 +112,36 @@ fn main() {
 
 /// Create a fixture for the given proof.
 fn create_proof_fixture(
-    proof: &SP1ProofWithPublicValues,
+    sp1_proof: &SP1ProofWithPublicValues,
     vk: &SP1VerifyingKey,
     system: ProofSystem,
 ) {
     // Deserialize the public values.
-    let bytes = proof.public_values.as_slice();
-    let PublicValuesStruct { n, a, b } = PublicValuesStruct::abi_decode(bytes).unwrap();
+    let bytes = sp1_proof.public_values.as_slice();
+    let PublicValuesStruct {
+        commitment,
+        z,
+        y,
+        proof,
+        result,
+    } = PublicValuesStruct::abi_decode(bytes).unwrap();
+
+    // Convert Bytes to the correct types
+    let commitment = Bytes48::from_bytes_vec(commitment.to_vec()).unwrap();
+    let z = Bytes32::from_bytes_vec(z.to_vec()).unwrap();
+    let y = Bytes32::from_bytes_vec(y.to_vec()).unwrap();
+    let input_proof = Bytes48::from_bytes_vec(proof.to_vec()).unwrap();
 
     // Create the testing fixture so we can test things end-to-end.
-    let fixture = SP1FibonacciProofFixture {
-        a,
-        b,
-        n,
+    let fixture = SP1KZGRSProofFixture {
+        commitment,
+        z,
+        y,
+        input_proof,
+        result,
         vkey: vk.bytes32().to_string(),
         public_values: format!("0x{}", hex::encode(bytes)),
-        proof: format!("0x{}", hex::encode(proof.bytes())),
+        sp1_proof: format!("0x{}", hex::encode(sp1_proof.bytes())),
     };
 
     // The verification key is used to verify that the proof corresponds to the execution of the
@@ -115,7 +158,7 @@ fn create_proof_fixture(
 
     // The proof proves to the verifier that the program was executed with some inputs that led to
     // the give public values.
-    println!("Proof Bytes: {}", fixture.proof);
+    println!("SP1 Proof Bytes: {:?}", fixture.sp1_proof);
 
     // Save the fixture to a file.
     let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../contracts/src/fixtures");
