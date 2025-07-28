@@ -111,3 +111,15 @@ command:
 ```sh
 SP1_PROVER=network NETWORK_PRIVATE_KEY=... cargo run --release --bin evm
 ```
+
+## Cycle Counts in SP1
+
+In my Macbook Air M2, the cycle counts are as follows:
+
+| Test                                   | Cycle Count |
+| -------------------------------------- | ----------- |
+| Verify blob KZG proof                  |   |
+| Verify blob KZG proof batch (10 blobs) |  |
+| Evaluate polynomial in evaluation form |   |
+| Compute challenge                      |   |
+| Verify KZG proof                       | 9,508,114   |
