@@ -52,6 +52,36 @@ Values are correct!
 Number of cycles: 9508114
 ```
 
+在 i9-13900KF, 24 核, 内存 64G 服务器上运行：
+
+```sh
+jade@rtx4090:~/jade/sp1-kzg-rs/script$ cargo run --release -- --execute
+   Compiling kzg-rs-script v0.1.0 (/home/jade/jade/sp1-kzg-rs/script)
+warning: kzg-rs-script@0.1.0: rustc +succinct --version: "rustc 1.88.0-dev\n"
+warning: kzg-rs-script@0.1.0: kzg-rs-program built at 2025-08-25 09:31:56
+    Finished `release` profile [optimized] target(s) in 10.09s
+     Running `/home/jade/jade/sp1-kzg-rs/target/release/kzg-rs --execute`
+commitment: 0x93efc82d2017e9c57834a1246463e64774e56183bb247c8fc9dd98c56817e878d97b05f5c8d900acf1fbbbca6f146556
+z: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+y: 0x0000000000000000000000000000000000000000000000000000000000000000
+input_proof: 0x92c51ff81dd71dab71cefecd79e8274b4b7ba36a0f40e2dc086bc4061c7f63249877db23297212991fd63e07b7ebc348
+Execute the program...
+stdout: 🚀 KZG-RS 验证工具
+stdout: ==================
+stdout: 开始运行 KZG 证明验证测试...
+Program executed successfully.
+Execute time: 512.566007ms
+commitment: 0x93efc82d2017e9c57834a1246463e64774e56183bb247c8fc9dd98c56817e878d97b05f5c8d900acf1fbbbca6f146556
+z: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+y: 0x0000000000000000000000000000000000000000000000000000000000000000
+proof: 0x92c51ff81dd71dab71cefecd79e8274b4b7ba36a0f40e2dc086bc4061c7f63249877db23297212991fd63e07b7ebc348
+result: true
+Verify the proof...
+Verify kzg proof time: 1.87159ms
+Values are correct!
+Number of cycles: 9508114
+```
+
 ### Generate an SP1 Core Proof
 
 To generate an SP1 [core proof](https://docs.succinct.xyz/docs/sp1/generating-proofs/proof-types#core-default) for your program:
@@ -81,6 +111,28 @@ Generate proof time: 759.993709125s
 Successfully generated proof!
 Verify the proof...
 Verify proof time: 8.48499425s
+```
+
+在 i9-13900KF, 24 核, 内存 64G 服务器上运行：
+
+```sh
+commitment: 0x93efc82d2017e9c57834a1246463e64774e56183bb247c8fc9dd98c56817e878d97b05f5c8d900acf1fbbbca6f146556
+z: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+y: 0x0000000000000000000000000000000000000000000000000000000000000000
+input_proof: 0x92c51ff81dd71dab71cefecd79e8274b4b7ba36a0f40e2dc086bc4061c7f63249877db23297212991fd63e07b7ebc348
+Setup the program for proving...
+Setup time: 442.867371ms
+Generate the proof...
+stdout: 🚀 KZG-RS 验证工具
+stdout: ==================
+stdout: 开始运行 KZG 证明验证测试...
+stdout: 🚀 KZG-RS 验证工具
+stdout: ==================
+stdout: 开始运行 KZG 证明验证测试...
+Generate proof time: 403.420874583s
+Successfully generated proof!
+Verify the proof...
+Verify proof time: 5.02071198s
 ```
 
 ### Generate an EVM-Compatible Proof
